@@ -1,0 +1,45 @@
+services:
+  upstream:
+    image: earthscope/ringserver:4.5.6
+    volumes:
+      - ./miniseed:/seed:ro
+      - ./config/upstream.conf:/config/ringserver.conf:ro
+      - upstream-data:/data
+    environment:
+      RS_CONFIG_FILE: /config/ringserver.conf
+
+  rs0:
+    image: earthscope/ringserver:4.5.6
+    volumes:
+      - ./config/replica.conf:/config/ringserver.conf:ro
+      - rs0-data:/data
+    environment:
+      RS_CONFIG_FILE: /config/ringserver.conf
+
+  rs1:
+    image: earthscope/ringserver:4.5.6
+    volumes:
+      - ./config/replica.conf:/config/ringserver.conf:ro
+      - rs1-data:/data
+    environment:
+      RS_CONFIG_FILE: /config/ringserver.conf
+
+  feeder:
+    build: ..
+    restart: on-failure
+    depends_on:
+      - upstream
+      - rs0
+      - rs1
+    volumes:
+      - feeder-data:/data
+    environment:
+      FEEDER_SEEDLINK_HOST: upstream:18000
+      FEEDER_DATALINK_HOSTS: rs0:16000,rs1:16000
+      FEEDER_VERBOSE: "1"
+
+volumes:
+  upstream-data:
+  rs0-data:
+  rs1-data:
+  feeder-data:
