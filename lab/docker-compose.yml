@@ -36,7 +36,9 @@ services:
     environment:
       FEEDER_SEEDLINK_HOST: upstream:18000
       FEEDER_DATALINK_HOSTS: rs0:16000,rs1:16000
+      FEEDER_STREAMS: XX_TEST
       FEEDER_VERBOSE: "1"
+    command: ["-tw", "2012,05,12,00,00,00:"]
 
 volumes:
   upstream-data:

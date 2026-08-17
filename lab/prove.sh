@@ -2,49 +2,48 @@
 set -euo pipefail
 
 cd "$(dirname "$0")"
-NETWORK="$(docker compose ps -q feeder | xargs docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' | head -1)"
 
-read_pktid() {
-  local host="$1"
-  docker run --rm --network "$NETWORK" python:3.12-slim python3 - <<PY
-import socket
+# Stop feeder so DataLink read probes are not blocked by open write connections.
+docker compose stop feeder >/dev/null 2>&1 || true
 
-host = "${host}"
-port = 16000
-s = socket.create_connection((host, port), timeout=5)
-s.sendall(b"ID ringserver-feeder-probe:probe:1:linux\\r")
-buf = b""
-while b"\\r" not in buf:
-    chunk = s.recv(4096)
-    if not chunk:
-        break
-    buf += chunk
-s.sendall(b"POSITION SET LATEST\\r")
-buf = b""
-while b"\\r" not in buf:
-    chunk = s.recv(4096)
-    if not chunk:
-        break
-    buf += chunk
-line = buf.decode("ascii", errors="replace").split("\\r")[0]
-parts = line.split()
-if len(parts) >= 2 and parts[0] in ("OK", "ERROR"):
-    print(parts[1])
-else:
-    print("0")
+python3 - <<'PY'
+import subprocess
+import sys
+
+try:
+    from datalink_client import DataLink
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "datalink-client"])
+    from datalink_client import DataLink
+
+compose_dir = "."
+ids: dict[str, int] = {}
+
+for service in ("rs0", "rs1"):
+    cid = subprocess.check_output(
+        ["docker", "compose", "ps", "-q", service],
+        cwd=compose_dir,
+        text=True,
+    ).strip()
+    if not cid:
+        print(f"FAIL: {service} container not running")
+        sys.exit(1)
+
+    ip = subprocess.check_output(
+        ["docker", "inspect", "-f", "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}", cid],
+        text=True,
+    ).strip()
+
+    with DataLink(ip, 16000) as dl:
+        pktid = dl.set_position_latest()
+        ids[service] = int(pktid)
+        print(f"{service} latest pktid: {pktid}")
+
+id0, id1 = ids["rs0"], ids["rs1"]
+if id0 > 0 and id1 > 0 and id0 == id1:
+    print("PASS: replicas share packet IDs")
+    sys.exit(0)
+
+print("FAIL: packet IDs differ or ring is empty")
+sys.exit(1)
 PY
-}
-
-id0="$(read_pktid rs0)"
-id1="$(read_pktid rs1)"
-
-echo "rs0 latest pktid: $id0"
-echo "rs1 latest pktid: $id1"
-
-if [[ -n "$id0" && -n "$id1" && "$id0" == "$id1" && "$id0" != "0" ]]; then
-  echo "PASS: replicas share packet IDs"
-  exit 0
-fi
-
-echo "FAIL: packet IDs differ or ring is empty"
-exit 1

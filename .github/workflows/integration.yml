@@ -1,0 +1,28 @@
+name: Integration
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  lab:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and start lab stack
+        working-directory: lab
+        run: |
+          docker compose up -d --build
+          sleep 20
+
+      - name: Verify replica packet IDs match
+        working-directory: lab
+        run: bash prove.sh
+
+      - name: Tear down lab stack
+        if: always()
+        working-directory: lab
+        run: docker compose down -v
