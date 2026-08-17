@@ -13,7 +13,9 @@ import sys
 try:
     from datalink_client import DataLink
 except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "datalink-client"])
+    subprocess.check_call(
+        [sys.executable, "-m", "pip", "install", "-q", "datalink-client", "--break-system-packages"],
+    )
     from datalink_client import DataLink
 
 compose_dir = "."

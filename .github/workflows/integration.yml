@@ -21,6 +21,9 @@ jobs:
           docker compose up -d --build
           sleep 20
 
+      - name: Install prove.sh dependencies
+        run: python3 -m pip install datalink-client
+
       - name: Verify replica packet IDs match
         working-directory: lab
         run: bash prove.sh
