@@ -1,0 +1,17 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    permissions:
+      contents: write
+      packages: write
+    uses: actionsforge/actions/.github/workflows/docker-image-release.yml@main
+    secrets: inherit

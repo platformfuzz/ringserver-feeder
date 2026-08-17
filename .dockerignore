@@ -1,0 +1,9 @@
+.git
+.github
+README.md
+LICENSE
+lab
+*.md
+.vscode
+.gitignore
+.DS_Store

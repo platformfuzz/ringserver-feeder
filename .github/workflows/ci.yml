@@ -1,0 +1,14 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: actionsforge/actions/.github/workflows/docker-image-validate.yml@main
+    with:
+      image-tag: "ringserver-feeder:test"
+      scan-enabled: false
