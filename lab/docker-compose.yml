@@ -1,6 +1,6 @@
 services:
   upstream:
-    image: earthscope/ringserver:4.5.6
+    image: ghcr.io/platformfuzz/ringserver:4.5.6
     volumes:
       - ./miniseed:/seed:ro
       - ./config/upstream.conf:/config/ringserver.conf:ro
@@ -9,7 +9,7 @@ services:
       RS_CONFIG_FILE: /config/ringserver.conf
 
   rs0:
-    image: earthscope/ringserver:4.5.6
+    image: ghcr.io/platformfuzz/ringserver:4.5.6
     volumes:
       - ./config/replica.conf:/config/ringserver.conf:ro
       - rs0-data:/data
@@ -17,7 +17,7 @@ services:
       RS_CONFIG_FILE: /config/ringserver.conf
 
   rs1:
-    image: earthscope/ringserver:4.5.6
+    image: ghcr.io/platformfuzz/ringserver:4.5.6
     volumes:
       - ./config/replica.conf:/config/ringserver.conf:ro
       - rs1-data:/data

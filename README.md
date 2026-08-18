@@ -41,6 +41,10 @@ docker compose up --build -d
 docker compose down
 ```
 
+Upstream and replica services use pinned `ghcr.io/platformfuzz/ringserver`
+tags. A ringserver `v*` release dispatches this repo to open a bump PR so
+Integration re-runs against the new serve image.
+
 Upstream ringserver scans `lab/miniseed/`. The feeder writes to `rs0` and `rs1`.
 `prove.sh` checks both replicas expose the same latest DataLink packet ID.
 
