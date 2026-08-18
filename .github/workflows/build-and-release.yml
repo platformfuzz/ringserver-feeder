@@ -9,11 +9,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  lab:
+  test:
     uses: ./.github/workflows/integration.yml
 
   build:
-    needs: lab
+    needs: test
     permissions:
       contents: write
       packages: write
