@@ -48,6 +48,30 @@ Integration re-runs against the new serve image.
 Upstream ringserver scans `lab/miniseed/`. The feeder writes to `rs0` and `rs1`.
 `prove.sh` checks both replicas expose the same latest DataLink packet ID.
 
+### GitHub App for ringserver pin PRs
+
+**Bump ringserver** (daily cron, `workflow_dispatch`, or `repository_dispatch` type
+`ringserver-released`) opens a compose pin PR when GHCR has a newer `x.y.z` tag.
+Org policy does not let Actions create PRs with `GITHUB_TOKEN`, so the job uses the
+same private GitHub App as `seiscomp-gui` / `seiscomp-base`.
+
+1. Open the existing bump App under
+   [platformfuzz GitHub Apps](https://github.com/organizations/platformfuzz/settings/apps)
+   (see `seiscomp-gui` README for create steps if you still need a new App).
+2. **Install / configure** → add **`ringserver-feeder`** (Contents + Pull requests:
+   Read and write). Keep the App installed on `seiscomp-gui` as well.
+3. In **this** repo: **Settings → Secrets and variables → Actions** (secrets, not
+   variables):
+   - `SEISCOMP_BUMP_APP_CLIENT_ID` = Client ID (not App ID)
+   - `SEISCOMP_BUMP_APP_PRIVATE_KEY` = full PEM
+4. Copy the same two secrets onto **`platformfuzz/ringserver`**. Its
+   `notify-feeder.yml` mints an App token scoped to `ringserver-feeder` and sends
+   `repository_dispatch` on `v*` tags. The App does not need to be installed on
+   `ringserver`.
+
+After both secrets exist here, **Actions → Bump ringserver → Run workflow** to
+confirm `create-github-app-token` and `gh pr create` succeed.
+
 ## Build
 
 ```bash
